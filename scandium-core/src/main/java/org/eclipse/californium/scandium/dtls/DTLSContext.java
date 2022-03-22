@@ -381,6 +381,10 @@ public final class DTLSContext implements Destroyable {
 		this.sequenceNumbers[writeEpoch] = 0L;
 	}
 
+	public long getLastSequenceNumber() {
+		return this.sequenceNumbers[writeEpoch];
+	}
+
 	/**
 	 * Gets the smallest unused sequence number for outbound records for the
 	 * current epoch.
@@ -806,6 +810,14 @@ public final class DTLSContext implements Destroyable {
 	 */
 	public void incrementMacErrors() {
 		++macErrors;
+	}
+
+	public long getReceiveWindowUpperCurrent() {
+		return receiveWindowUpperCurrent;
+	}
+
+	public long getReceiveWindowLowerBoundary() {
+		return receiveWindowLowerBoundary;
 	}
 
 	/**

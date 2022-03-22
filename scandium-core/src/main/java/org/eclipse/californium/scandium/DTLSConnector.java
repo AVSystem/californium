@@ -284,7 +284,7 @@ public class DTLSConnector implements Connector, PersistentConnector, RecordLaye
 		MDC_SUPPORT = mdc;
 	}
 
-	/** all the configuration options for the DTLS connector */ 
+	/** all the configuration options for the DTLS connector */
 	protected final DtlsConnectorConfig config;
 
 	private final ResumptionSupportingConnectionStore connectionStore;
@@ -465,7 +465,7 @@ public class DTLSConnector implements Connector, PersistentConnector, RecordLaye
 	 * @return connection store
 	 * @since 3.0 (moved SessionCache from parameter to configuration)
 	 */
-	protected static ResumptionSupportingConnectionStore createConnectionStore(DtlsConnectorConfig configuration) {
+	public static ResumptionSupportingConnectionStore createConnectionStore(DtlsConnectorConfig configuration) {
 		return new InMemoryConnectionStore(configuration.getMaxConnections(),
 				configuration.getStaleConnectionThresholdSeconds(), configuration.getSessionStore()).setTag(configuration.getLoggingTag());
 
@@ -487,7 +487,7 @@ public class DTLSConnector implements Connector, PersistentConnector, RecordLaye
 	 * @throws IllegalStateException if the connection store has already a cid
 	 *             generator.
 	 */
-	protected DTLSConnector(final DtlsConnectorConfig configuration, final ResumptionSupportingConnectionStore connectionStore) {
+	public DTLSConnector(final DtlsConnectorConfig configuration, final ResumptionSupportingConnectionStore connectionStore) {
 		if (configuration == null) {
 			throw new NullPointerException("Configuration must not be null");
 		} else if (connectionStore == null) {
@@ -669,7 +669,7 @@ public class DTLSConnector implements Connector, PersistentConnector, RecordLaye
 	 * Intended to be used for subclass specific handshaker initialization.
 	 * 
 	 * @param handshaker new create handshaker
-	 * @deprecated use {@link Builder#setSessionListener(SessionListener)} instead 
+	 * @deprecated use {@link Builder#setSessionListener(SessionListener)} instead
 	 */
 	protected void onInitializeHandshaker(final Handshaker handshaker) {
 	}
@@ -1144,7 +1144,7 @@ public class DTLSConnector implements Connector, PersistentConnector, RecordLaye
 	/**
 	 * Clears all connection state this connector maintains for peers.
 	 * <p>
-	 * After invoking this method a new connection needs to be established with a peer using a 
+	 * After invoking this method a new connection needs to be established with a peer using a
 	 * full handshake in order to exchange messages with it again.
 	 */
 	public final void clearConnectionState() {
@@ -1638,8 +1638,8 @@ public class DTLSConnector implements Connector, PersistentConnector, RecordLaye
 	public void processRecord(Record record, Connection connection) {
 
 		try {
-			// ensure, that connection is still related to record 
-			// and not changed by processing an other record before 
+			// ensure, that connection is still related to record
+			// and not changed by processing an other record before
 			if (record.getConnectionId() == null && !connection.equalsPeerAddress(record.getPeerAddress())) {
 				long delay = TimeUnit.NANOSECONDS.toMillis(ClockUtil.nanoRealtime() - record.getReceiveNanos());
 				DROP_LOGGER.debug("Drop received record {}, connection changed address {} => {}! (shift {}ms)",
@@ -1652,13 +1652,13 @@ public class DTLSConnector implements Connector, PersistentConnector, RecordLaye
 			}
 
 			int epoch = record.getEpoch();
-			LOGGER.trace("Received DTLS record of type [{}], length: {}, [epoche:{},rseqn:{}]", 
+			LOGGER.trace("Received DTLS record of type [{}], length: {}, [epoche:{},rseqn:{}]",
 					record.getType(), record.getFragmentLength(), epoch, record.getSequenceNumber());
 
 			Handshaker handshaker = connection.getOngoingHandshake();
 			if (handshaker != null && handshaker.isExpired()) {
 				// handshake expired during Android / OS "deep sleep"
-				// on receiving, fail to remove connection, if session is not established 
+				// on receiving, fail to remove connection, if session is not established
 				handshaker.handshakeFailed(new Exception("handshake already expired!"));
 				if (connectionStore.get(connection.getConnectionId()) != connection) {
 					// connection removed, then drop record
@@ -2044,7 +2044,7 @@ public class DTLSConnector implements Connector, PersistentConnector, RecordLaye
 					StringUtil.lineSeparator(), record);
 		}
 		try {
-			// CLIENT_HELLO with epoch 0 is not encrypted, so use DTLSConnectionState.NULL 
+			// CLIENT_HELLO with epoch 0 is not encrypted, so use DTLSConnectionState.NULL
 			record.decodeFragment(DTLSConnectionState.NULL);
 			DTLSMessage message = record.getFragment();
 			if (message instanceof FragmentedHandshakeMessage) {
@@ -3309,7 +3309,7 @@ public class DTLSConnector implements Connector, PersistentConnector, RecordLaye
 		}
 		return mode;
 	}
-	
+
 	/**
 	 * Sets a handler to call back if an alert message is received from a peer.
 	 * <p>
@@ -3358,5 +3358,5 @@ public class DTLSConnector implements Connector, PersistentConnector, RecordLaye
 	public String toString() {
 		return getProtocol() + "-" + StringUtil.toString(getAddress());
 	}
-	
+
 }
