@@ -8,7 +8,7 @@
 
 	<groupId>org.eclipse.californium</groupId>
 	<artifactId>parent</artifactId>
-	<version>3.3.2-SNAPSHOT</version>
+	<version>3.3.1-avs2-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>Californium (Cf) Parent</name>
@@ -114,14 +114,14 @@
 
 	<distributionManagement>
 		<repository>
-			<id>repo.eclipse.org</id>
-			<name>Californium Repository - Releases</name>
-			<url>https://repo.eclipse.org/content/repositories/californium-releases/</url>
+			<id>avs_repo</id>
+			<name>AVSystem repository - Releases</name>
+			<url>https://repository.avsystem.com/libs-release-local/</url>
 		</repository>
 		<snapshotRepository>
-			<id>repo.eclipse.org</id>
-			<name>Californium Repository - Snapshots</name>
-			<url>https://repo.eclipse.org/content/repositories/californium-snapshots/</url>
+			<id>avs_repo</id>
+			<name>AVSystem repository - Snapshots</name>
+			<url>https://repository.avsystem.com/libs-snapshot-local/</url>
 		</snapshotRepository>
 	</distributionManagement>
 
@@ -498,25 +498,6 @@
 				<artifactId>license-maven-plugin</artifactId>
 			</plugin>
 			<plugin>
-				<!-- Use the Nexus Staging plugin as a full replacement for the standard 
-					Maven Deploy plugin. See https://github.com/sonatype/nexus-maven-plugins/tree/master/staging/maven-plugin 
-					why this makes sense :-) We can control whether we want to deploy to the 
-					Eclipse repo or Maven Central by a combination of the version being a SNAPHOT 
-					or release version and property skipStaging=true/false. In any case we can 
-					take advantage of the plugin's "deferred deploy" feature which makes sure 
-					that all artifacts of a multi-module project are deployed as a whole at the 
-					end of the build process instead of deploying each module's artifacts individually 
-					as part of building the module. -->
-				<groupId>org.sonatype.plugins</groupId>
-				<artifactId>nexus-staging-maven-plugin</artifactId>
-				<extensions>true</extensions>
-				<configuration>
-					<serverId>ossrh</serverId>
-					<nexusUrl>https://oss.sonatype.org/</nexusUrl>
-					<autoReleaseAfterClose>false</autoReleaseAfterClose>
-				</configuration>
-			</plugin>
-			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>build-helper-maven-plugin</artifactId>
 				<version>3.2.0</version>
@@ -529,75 +510,75 @@
 					</execution>
 				</executions>
 			</plugin>
-			<plugin>
-				<groupId>org.revapi</groupId>
-				<artifactId>revapi-maven-plugin</artifactId>
-				<configuration>
-					<oldVersion>3.3.0</oldVersion>
-					<analysisConfiguration>
-						<revapi.versions>
-							<enabled>true</enabled>
-							<onAllowed>
-								<criticality>documented</criticality>
-							</onAllowed>
-						</revapi.versions>
-						<revapi.differences>
-							<ignore>true</ignore>
-							<differences>
-								<item>
-									<regex>true</regex>
-									<code>java.class.externalClassExposedInAPI</code>
-									<package>org\.eclipse\.californium\..*</package>
-									<justification>
-										Californium uses classes of other californium modules
-										very frequently in the APIs. It's considered, that
-										always all used californium modules must have the same
-										version!
-									</justification>
-								</item>
-								<item>
-									<regex>true</regex>
-									<code>java.class.externalClassExposedInAPI</code>
-									<package>org\.slf4j</package>
-									<justification>
-										Californium uses classes of slf4j in some case with scope protected.
-									</justification>
-								</item>
-							</differences>
-						</revapi.differences>
-						<revapi.filter>
-							<elements>
-								<exclude>
-									<item>
-										<matcher>java</matcher>
-										<match>@org.eclipse.californium.elements.util.NoPublicAPI ^*;</match>
-									</item>
-									<item>
-										<matcher>java</matcher>
-										<match>@org.eclipse.californium.elements.util.WipAPI ^*;</match>
-									</item>
-								</exclude>
-							</elements>
-						</revapi.filter>
-					</analysisConfiguration>
-					<failOnMissingConfigurationFiles>false</failOnMissingConfigurationFiles>
-					<analysisConfigurationFiles>
-						<configurationFile>
-							<path>api-changes.json</path>
-							<roots>
-								<root>${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}</root>
-							</roots>
-						</configurationFile>
-					</analysisConfigurationFiles>
-				</configuration>
-				<executions>
-					<execution>
-						<goals>
-							<goal>check</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
+<!--			<plugin>-->
+<!--				<groupId>org.revapi</groupId>-->
+<!--				<artifactId>revapi-maven-plugin</artifactId>-->
+<!--				<configuration>-->
+<!--					<oldVersion>3.3.0</oldVersion>-->
+<!--					<analysisConfiguration>-->
+<!--						<revapi.versions>-->
+<!--							<enabled>true</enabled>-->
+<!--							<onAllowed>-->
+<!--								<criticality>documented</criticality>-->
+<!--							</onAllowed>-->
+<!--						</revapi.versions>-->
+<!--						<revapi.differences>-->
+<!--							<ignore>true</ignore>-->
+<!--							<differences>-->
+<!--								<item>-->
+<!--									<regex>true</regex>-->
+<!--									<code>java.class.externalClassExposedInAPI</code>-->
+<!--									<package>org\.eclipse\.californium\..*</package>-->
+<!--									<justification>-->
+<!--										Californium uses classes of other californium modules-->
+<!--										very frequently in the APIs. It's considered, that-->
+<!--										always all used californium modules must have the same-->
+<!--										version!-->
+<!--									</justification>-->
+<!--								</item>-->
+<!--								<item>-->
+<!--									<regex>true</regex>-->
+<!--									<code>java.class.externalClassExposedInAPI</code>-->
+<!--									<package>org\.slf4j</package>-->
+<!--									<justification>-->
+<!--										Californium uses classes of slf4j in some case with scope protected.-->
+<!--									</justification>-->
+<!--								</item>-->
+<!--							</differences>-->
+<!--						</revapi.differences>-->
+<!--						<revapi.filter>-->
+<!--							<elements>-->
+<!--								<exclude>-->
+<!--									<item>-->
+<!--										<matcher>java</matcher>-->
+<!--										<match>@org.eclipse.californium.elements.util.NoPublicAPI ^*;</match>-->
+<!--									</item>-->
+<!--									<item>-->
+<!--										<matcher>java</matcher>-->
+<!--										<match>@org.eclipse.californium.elements.util.WipAPI ^*;</match>-->
+<!--									</item>-->
+<!--								</exclude>-->
+<!--							</elements>-->
+<!--						</revapi.filter>-->
+<!--					</analysisConfiguration>-->
+<!--					<failOnMissingConfigurationFiles>false</failOnMissingConfigurationFiles>-->
+<!--					<analysisConfigurationFiles>-->
+<!--						<configurationFile>-->
+<!--							<path>api-changes.json</path>-->
+<!--							<roots>-->
+<!--								<root>${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}</root>-->
+<!--							</roots>-->
+<!--						</configurationFile>-->
+<!--					</analysisConfigurationFiles>-->
+<!--				</configuration>-->
+<!--				<executions>-->
+<!--					<execution>-->
+<!--						<goals>-->
+<!--							<goal>check</goal>-->
+<!--						</goals>-->
+<!--					</execution>-->
+<!--				</executions>-->
+<!--			</plugin>-->
 
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
@@ -794,31 +775,31 @@
 				</plugins>
 			</build>
 		</profile>
-		<profile>
-			<id>revapi</id>
-			<activation>
-				<jdk>[1.8,)</jdk>
-				<property>
-					<name>revapi.skip</name>
-					<value>!true</value>
-				</property>
-			</activation>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.revapi</groupId>
-						<artifactId>revapi-maven-plugin</artifactId>
-						<executions>
-							<execution>
-								<goals>
-									<goal>check</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
+<!--		<profile>-->
+<!--			<id>revapi</id>-->
+<!--			<activation>-->
+<!--				<jdk>[1.8,)</jdk>-->
+<!--				<property>-->
+<!--					<name>revapi.skip</name>-->
+<!--					<value>!true</value>-->
+<!--				</property>-->
+<!--			</activation>-->
+<!--			<build>-->
+<!--				<plugins>-->
+<!--					<plugin>-->
+<!--						<groupId>org.revapi</groupId>-->
+<!--						<artifactId>revapi-maven-plugin</artifactId>-->
+<!--						<executions>-->
+<!--							<execution>-->
+<!--								<goals>-->
+<!--									<goal>check</goal>-->
+<!--								</goals>-->
+<!--							</execution>-->
+<!--						</executions>-->
+<!--					</plugin>-->
+<!--				</plugins>-->
+<!--			</build>-->
+<!--		</profile>-->
 		<profile>
 			<id>bc-tests</id>
 			<activation>
