@@ -61,6 +61,7 @@ import org.eclipse.californium.scandium.dtls.CertificateRequest;
 import org.eclipse.californium.scandium.dtls.CertificateType;
 import org.eclipse.californium.scandium.dtls.ConnectionIdExtension;
 import org.eclipse.californium.scandium.dtls.ConnectionIdGenerator;
+import org.eclipse.californium.scandium.dtls.DtlsBindingActionWithCallback;
 import org.eclipse.californium.scandium.dtls.ExtendedMasterSecretMode;
 import org.eclipse.californium.scandium.dtls.HelloVerifyRequest;
 import org.eclipse.californium.scandium.dtls.InMemoryConnectionStore;
@@ -271,6 +272,8 @@ public final class DtlsConnectorConfig {
 	private ResumptionVerifier resumptionVerifier;
 
 	private DtlsHealth healthHandler;
+
+	private DtlsBindingActionWithCallback beforeConnectionRetrievalAction;
 
 	/**
 	 * Creates a new instance for configuration options for a
@@ -1369,6 +1372,16 @@ public final class DtlsConnectorConfig {
 	}
 
 	/**
+	 * Gets before connection retrieval action.
+	 *
+	 * @return before connection retrieval action.
+	 * @see Builder#setBeforeConnectionRetrievalAction(DtlsBindingActionWithCallback)
+	 */
+	public DtlsBindingActionWithCallback getBeforeConnectionRetrievalAction() {
+		return beforeConnectionRetrievalAction;
+	}
+
+	/**
 	 * Check, if only recommended cipher suite are to be used.
 	 * 
 	 * @return {@code true}, if only recommended cipher suites are used.
@@ -1429,6 +1442,7 @@ public final class DtlsConnectorConfig {
 		cloned.sessionStore = sessionStore;
 		cloned.resumptionVerifier = resumptionVerifier;
 		cloned.healthHandler = healthHandler;
+		cloned.beforeConnectionRetrievalAction = beforeConnectionRetrievalAction;
 		return cloned;
 	}
 
@@ -1682,6 +1696,22 @@ public final class DtlsConnectorConfig {
 		 */
 		public Builder setHealthHandler(DtlsHealth healthHandler) {
 			config.healthHandler = healthHandler;
+			return this;
+		}
+
+		/**
+		 * Set an action invoked on every received DTLS datagram, before internal connectionStore is accessed.
+		 * It may be used to inject some synchronous or asynchronous action.
+		 * <p>
+		 * <b>CAUTION:</b> {@link DtlsBindingActionWithCallback} implementation must call callback.run()
+		 * in order to continue record processing in Scandium.
+		 *
+		 * @param beforeConnectionRetrievalAction before connection retrieval action.
+		 * @return this builder for command chaining
+		 * @see DtlsConnectorConfig#getBeforeConnectionRetrievalAction()
+		 */
+		public Builder setBeforeConnectionRetrievalAction(DtlsBindingActionWithCallback beforeConnectionRetrievalAction) {
+			config.beforeConnectionRetrievalAction = beforeConnectionRetrievalAction;
 			return this;
 		}
 
