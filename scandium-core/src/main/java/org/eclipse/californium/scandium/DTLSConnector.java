@@ -200,6 +200,7 @@ import org.eclipse.californium.scandium.dtls.DTLSConnectionState;
 import org.eclipse.californium.scandium.dtls.DTLSContext;
 import org.eclipse.californium.scandium.dtls.DTLSMessage;
 import org.eclipse.californium.scandium.dtls.DTLSSession;
+import org.eclipse.californium.scandium.dtls.DtlsBindingActionWithCallback;
 import org.eclipse.californium.scandium.dtls.DtlsException;
 import org.eclipse.californium.scandium.dtls.ExtendedMasterSecretMode;
 import org.eclipse.californium.scandium.dtls.FragmentedHandshakeMessage;
@@ -444,6 +445,7 @@ public class DTLSConnector implements Connector, PersistentConnector, RecordLaye
 	private final SessionListener sessionListener;
 	private final SessionListener customSessionListener;
 	private final ConnectionListener connectionListener;
+	private final DtlsBindingActionWithCallback beforeConnectionRetrievalAction;
 	private volatile ExecutorService executorService;
 	private boolean hasInternalExecutor;
 
@@ -509,6 +511,7 @@ public class DTLSConnector implements Connector, PersistentConnector, RecordLaye
 			this.connectionStore.setConnectionListener(config.getConnectionListener());
 			this.customSessionListener = config.getSessionListener();
 			this.connectionListener = config.getConnectionListener();
+			this.beforeConnectionRetrievalAction = config.getBeforeConnectionRetrievalAction();
 			HandshakeResultHandler handler = new HandshakeResultHandler() {
 
 				@Override
@@ -1507,8 +1510,8 @@ public class DTLSConnector implements Connector, PersistentConnector, RecordLaye
 	 * @param router router address, {@code null}, if no router is used.
 	 * @since 2.5
 	 */
-	protected void processDatagram(DatagramPacket packet, InetSocketAddress router) {
-		InetSocketAddress peerAddress = (InetSocketAddress) packet.getSocketAddress();
+	protected void processDatagram(DatagramPacket packet, final InetSocketAddress router) {
+		final InetSocketAddress peerAddress = (InetSocketAddress) packet.getSocketAddress();
 		if (MDC_SUPPORT) {
 			MDC.put("PEER", StringUtil.toString(peerAddress));
 		}
@@ -1530,8 +1533,8 @@ public class DTLSConnector implements Connector, PersistentConnector, RecordLaye
 			}
 			return;
 		}
-		DatagramReader reader = new DatagramReader(packet.getData(), packet.getOffset(), packet.getLength());
-		List<Record> records = Record.fromReader(reader, connectionIdGenerator, timestamp);
+		final DatagramReader reader = new DatagramReader(packet.getData(), packet.getOffset(), packet.getLength());
+		final List<Record> records = Record.fromReader(reader, connectionIdGenerator, timestamp);
 		LOGGER.trace("Received {} DTLS records from {} using a {} byte datagram buffer", records.size(),
 				StringUtil.toLog(peerAddress), inboundDatagramBufferSize);
 
@@ -1556,7 +1559,39 @@ public class DTLSConnector implements Connector, PersistentConnector, RecordLaye
 		}
 
 		final Record firstRecord = records.get(0);
+		final ConnectionId connectionId = firstRecord.getConnectionId();
 
+		if (beforeConnectionRetrievalAction == null) {
+			processRecords(records, peerAddress, connectionId, router);
+		} else {
+			final Thread usedReceiverThread = Thread.currentThread();
+			final Runnable processingPart = new Runnable() {
+				@Override
+				public void run() {
+					processRecords(records, peerAddress, connectionId, router);
+				}
+			};
+			final Runnable callback = new Runnable() {
+				@Override
+				public void run() {
+					if (Thread.currentThread() == usedReceiverThread) {
+						// action has been performed on the receiver thread, continue synchronously
+						processingPart.run();
+					} else {
+						// async action, execute records processing on DTLSConnector's worker pool
+						getExecutorService().execute(processingPart);
+					}
+				}
+			};
+			beforeConnectionRetrievalAction.run(connectionId, peerAddress, callback);
+		}
+	}
+
+	private void processRecords(final List<Record> records, 
+								final InetSocketAddress peerAddress, 
+								final ConnectionId connectionId, 
+								final InetSocketAddress router) {
+		final Record firstRecord = records.get(0);
 		if (records.size() == 1 && firstRecord.isNewClientHello()) {
 			firstRecord.setAddress(peerAddress, router);
 			if (dtlsRole == DtlsRole.CLIENT_ONLY) {
@@ -1583,7 +1618,6 @@ public class DTLSConnector implements Connector, PersistentConnector, RecordLaye
 			return;
 		}
 
-		final ConnectionId connectionId = firstRecord.getConnectionId();
 		final Connection connection = getConnection(peerAddress, connectionId, false);
 
 		if (connection == null) {
